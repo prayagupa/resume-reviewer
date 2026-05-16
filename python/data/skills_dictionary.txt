@@ -1,0 +1,54 @@
+Python
+Java
+JavaScript
+TypeScript
+Scala
+Go
+Rust
+C++
+C#
+Ruby
+PHP
+Swift
+Kotlin
+SQL
+PostgreSQL
+MySQL
+MongoDB
+Redis
+Docker
+Kubernetes
+AWS
+GCP
+Azure
+Terraform
+Linux
+Git
+FastAPI
+Flask
+Django
+Spring
+React
+Vue
+Angular
+Node.js
+GraphQL
+REST
+CI/CD
+Jenkins
+GitHub Actions
+Agile
+Scrum
+Machine Learning
+TensorFlow
+PyTorch
+Pandas
+NumPy
+Spark
+Hadoop
+Kafka
+RabbitMQ
+Microservices
+System Design
+Leadership
+Project Management

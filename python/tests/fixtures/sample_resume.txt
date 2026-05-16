@@ -1,0 +1,14 @@
+Jane Doe
+jane.doe@example.com | (555) 123-4567
+
+Skills
+Python, FastAPI, AWS, Docker
+
+Experience
+Software Engineer | Acme Corp
+Jan 2020 - Present
+- Built APIs serving 10k users
+- Led migration to AWS and reduced costs by 20%
+
+Education
+B.S. Computer Science, 2018

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="container">
+    <h1>Resume Reviewer</h1>
+    <p class="subtitle">Upload a text-based PDF resume for a summary and pickup score.</p>
+
+    <form class="upload-form" action="/review" method="post" enctype="multipart/form-data">
+      <label for="resume">PDF resume</label>
+      <input id="resume" name="resume" type="file" accept="application/pdf,.pdf" required>
+      <button type="submit">Review resume</button>
+    </form>
+
+    <p class="disclaimer">Automated estimate only — not a hiring decision.</p>
+  </main>
+</body>
+</html>

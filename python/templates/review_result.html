@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="container">
+    <h1>Review Results</h1>
+
+    <section class="score-card">
+      <p class="score-label">Pickup score</p>
+      <p class="score-value">{{ result.score }} <span class="band">— {{ result.band }}</span></p>
+    </section>
+
+    <section>
+      <h2>Summary</h2>
+      <p>{{ result.summary }}</p>
+    </section>
+
+    <section>
+      <h2>Rationale</h2>
+      <ul>
+        {% for item in result.rationale %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section>
+      <h2>Detected sections</h2>
+      <p><strong>Skills:</strong> {{ result.sections.skills | join(', ') if result.sections.skills else 'None detected' }}</p>
+      <p><strong>Experience titles:</strong> {{ result.sections.experience_titles | join(', ') if result.sections.experience_titles else 'None detected' }}</p>
+      <p><strong>Education:</strong> {{ result.sections.education | join('; ') if result.sections.education else 'None detected' }}</p>
+    </section>
+
+    {% if show_extracted_text and result.extracted_text_preview %}
+    <section>
+      <h2>Extracted text preview</h2>
+      <pre class="preview">{{ result.extracted_text_preview }}</pre>
+    </section>
+    {% endif %}
+
+    <p><a href="/review">Review another resume</a></p>
+    <p class="disclaimer">Automated estimate only — not a hiring decision.</p>
+  </main>
+</body>
+</html>
