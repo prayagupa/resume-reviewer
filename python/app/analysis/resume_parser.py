@@ -66,7 +66,10 @@ class ResumeParser:
         sections = self._split_sections(lines)
         skills = self._extract_skills(text, sections.get("skills", []))
         education = self._extract_bullets(sections.get("education", []))
-        experience_titles = self._extract_experience_titles(sections.get("experience", lines))
+        experience_titles = self._extract_experience_titles(
+            sections.get("experience", []),
+            lines,
+        )
 
         years = self._estimate_years_experience(text)
         page_estimate = max(1, min(10, len(text) // 2500 + 1))

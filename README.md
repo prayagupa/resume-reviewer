@@ -36,8 +36,9 @@ The active application lives in [`python/`](python/). The repo root still contai
 
 ### Setup
 
+From the **repository root** (not `python/`):
+
 ```bash
-cd python
 python3.14 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
@@ -46,12 +47,12 @@ pip install -e ".[dev]"
 Optional: copy environment defaults and adjust if needed.
 
 ```bash
-cp .env.example .env
+cp python/.env.example .env
 ```
 
 ### Start the server
 
-From the `python/` directory with the virtualenv activated:
+With the virtualenv activated from the repository root:
 
 ```bash
 uvicorn app.main:app --reload --port 8000
@@ -75,9 +76,8 @@ curl -X POST http://127.0.0.1:8000/api/v1/reviews \
 ### Run tests
 
 ```bash
-cd python
 source .venv/bin/activate
-pytest tests/ -v
+pytest -v
 ```
 
 ## Project layout

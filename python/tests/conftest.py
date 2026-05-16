@@ -55,7 +55,7 @@ def sample_pdf_bytes(sample_resume_text: str) -> bytes:
     pdf.add_page()
     pdf.set_font("Helvetica", size=11)
     for line in sample_resume_text.splitlines():
-        pdf.multi_cell(0, 6, line)
+        pdf.multi_cell(pdf.epw, 6, line)
     out = BytesIO()
     pdf.output(out)
     return out.getvalue()

@@ -8,9 +8,11 @@ PDF resume upload, text extraction, rule-based scoring, and summary.
 
 ## Setup
 
+Install from the **repository root** (see the main [README](../README.md)):
+
 ```bash
-cd python
-python -m venv .venv
+cd ..
+python3.14 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 ```
@@ -28,5 +30,5 @@ API: `POST /api/v1/reviews` with multipart field `resume` (PDF).
 ## Test
 
 ```bash
-pytest tests/ -v
+pytest -v
 ```

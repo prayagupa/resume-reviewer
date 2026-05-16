@@ -3,10 +3,11 @@ project/target
 .idea_modules
 
 # Python
-python/.venv/
-python/**/__pycache__/
-python/*.egg-info/
-python/.pytest_cache/
-python/.coverage
-python/htmlcov/
+.venv/
+**/__pycache__/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.env
 python/.env
