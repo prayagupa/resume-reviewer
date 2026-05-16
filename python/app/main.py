@@ -16,7 +16,8 @@ from app.exceptions import (
     TooManyPagesError,
     UnreadablePdfError,
 )
-from app.routes import api, review
+from app.exceptions import LlmAnalyzerError
+from app.routes import api, feature_flags, review
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 app.include_router(review.router)
 app.include_router(api.router)
+app.include_router(feature_flags.router)
 
 
 @app.get("/health")
@@ -53,6 +55,18 @@ async def handle_bad_request(request: Request, exc: ResumeReviewerError) -> JSON
 
 @app.exception_handler(EncryptedPdfError)
 @app.exception_handler(UnreadablePdfError)
+@app.exception_handler(LlmAnalyzerError)
+async def handle_llm_error(request: Request, exc: ResumeReviewerError) -> JSONResponse | HTMLResponse:
+    if request.url.path.startswith("/api/"):
+        return JSONResponse(status_code=503, content=_error_payload(exc))
+    return templates.TemplateResponse(
+        request=request,
+        name="error.html",
+        context={"title": "LLM unavailable", "message": exc.message},
+        status_code=503,
+    )
+
+
 @app.exception_handler(TooManyPagesError)
 async def handle_unprocessable(request: Request, exc: ResumeReviewerError) -> JSONResponse | HTMLResponse:
     if request.url.path.startswith("/api/"):

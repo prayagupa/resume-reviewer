@@ -43,6 +43,13 @@ class ReviewContext(BaseModel):
     required_skills: list[str] = Field(default_factory=list)
 
 
+class LlmReviewOutput(BaseModel):
+    score: int = Field(ge=0, le=100)
+    summary: str
+    rationale: list[str] = Field(min_length=1)
+    sections: ResumeSections = Field(default_factory=ResumeSections)
+
+
 class ReviewResult(BaseModel):
     score: int = Field(ge=0, le=100)
     band: str
@@ -50,8 +57,10 @@ class ReviewResult(BaseModel):
     rationale: list[str]
     sections: ResumeSections
     analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    extracted_text_preview: str | None = None
+    extracted_text: str | None = None
     breakdown: ScoreBreakdown | None = None
+    analyzer_used: str = "rule"
+    fallback_reason: str | None = None
 
 
 def score_to_band(score: int) -> str:

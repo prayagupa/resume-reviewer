@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from fpdf import FPDF
 
+from app.analysis.llm_analyzer import build_llm_analyzer
 from app.analysis.rule_based import RuleBasedAnalyzer
 from app.config import BASE_DIR, Settings
 from app.extraction.pdf_extractor import PdfExtractor
@@ -63,5 +64,6 @@ def sample_pdf_bytes(sample_resume_text: str) -> bytes:
 
 @pytest.fixture
 def review_service(settings: Settings) -> ResumeReviewService:
-    analyzer = RuleBasedAnalyzer(settings.skills_dictionary_path)
-    return ResumeReviewService(PdfExtractor(), analyzer, settings)
+    rule = RuleBasedAnalyzer(settings.skills_dictionary_path)
+    llm = build_llm_analyzer(settings, settings.skills_dictionary_path)
+    return ResumeReviewService(PdfExtractor(), rule, llm, settings)

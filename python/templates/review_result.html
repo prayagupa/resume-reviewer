@@ -10,6 +10,13 @@
   <main class="container">
     <h1>Review Results</h1>
 
+    <p class="meta">
+      Analyzer: <strong>{{ result.analyzer_used }}</strong>
+      {% if result.fallback_reason %}
+      <span class="fallback">(fell back to rules: {{ result.fallback_reason }})</span>
+      {% endif %}
+    </p>
+
     <section class="score-card">
       <p class="score-label">Pickup score</p>
       <p class="score-value">{{ result.score }} <span class="band">— {{ result.band }}</span></p>
@@ -36,10 +43,10 @@
       <p><strong>Education:</strong> {{ result.sections.education | join('; ') if result.sections.education else 'None detected' }}</p>
     </section>
 
-    {% if show_extracted_text and result.extracted_text_preview %}
+    {% if flags.show_extracted_text and result.extracted_text %}
     <section>
-      <h2>Extracted text preview</h2>
-      <pre class="preview">{{ result.extracted_text_preview }}</pre>
+      <h2>Extracted text</h2>
+      <pre class="extracted-text">{{ result.extracted_text }}</pre>
     </section>
     {% endif %}
 

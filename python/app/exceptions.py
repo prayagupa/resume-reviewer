@@ -28,3 +28,7 @@ class UnreadablePdfError(ResumeReviewerError):
 
 class TooManyPagesError(ResumeReviewerError):
     pass
+
+
+class LlmAnalyzerError(ResumeReviewerError):
+    pass

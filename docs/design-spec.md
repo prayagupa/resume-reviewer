@@ -35,6 +35,8 @@ From [thoughts.md](./thoughts.md):
 
 ## 2. System context
 
+High-level data flow (see [§4.1](#41-system-design-diagrams) for component, sequence, and deployment diagrams).
+
 ```mermaid
 flowchart LR
   User[Hiring manager / candidate]
@@ -62,7 +64,7 @@ flowchart LR
 | Tests | **pytest** + **httpx** TestClient | Fast unit and API tests |
 | Packaging | **uv** or **pip** + `pyproject.toml` | Standard modern Python project layout |
 
-The legacy Scala/Spring app in this repository is **out of scope** for the resume reviewer. The Python app lives in a dedicated tree (e.g. `python/` at repo root or a new repo) and does not share the WAR/Jetty stack.
+The legacy Scala/Spring app in this repository is **out of scope** for the resume reviewer. The Python app lives under `python/` with packaging via the repo-root `pyproject.toml`.
 
 ### 2.2 Run model
 
@@ -123,26 +125,147 @@ Optional (v2):
 
 ## 4. Architecture
 
-### 4.1 Layered design
+### 4.1 System design diagrams
 
-```
-┌─────────────────────────────────────────┐
-│  Presentation (FastAPI routes + Jinja2)  │
-├─────────────────────────────────────────┤
-│  Application (ResumeReviewService)       │
-├─────────────────────────────────────────┤
-│  Domain (Pydantic models)                │
-├─────────────────────────────────────────┤
-│  Infrastructure                          │
-│  - pdf_extractor (pypdf / pdfplumber)    │
-│  - resume_parser                         │
-│  - rule_based_analyzer (MVP)             │
-│  - scoring_engine                        │
-│  - [v2] llm_client (Ollama / OpenAI)     │
-└─────────────────────────────────────────┘
+#### Component architecture
+
+```mermaid
+flowchart TB
+  subgraph clients [Clients]
+    Browser[Web browser]
+    APIClient[API client / curl]
+  end
+
+  subgraph presentation [Presentation layer]
+    Main[app/main.py<br/>FastAPI + exception handlers]
+    ReviewRoute[routes/review.py<br/>GET/POST /review]
+    ApiRoute[routes/api.py<br/>POST /api/v1/reviews]
+    Templates[Jinja2 templates]
+    Static[static/ CSS]
+  end
+
+  subgraph application [Application layer]
+    ReviewService[services/review_service.py<br/>ResumeReviewService]
+    Validate[validate_upload]
+  end
+
+  subgraph domain [Domain layer]
+    Models[models/review.py<br/>ReviewResult, ResumeSections]
+    Exceptions[exceptions.py]
+  end
+
+  subgraph infrastructure [Infrastructure layer]
+  direction TB
+    PdfExtractor[extraction/pdf_extractor.py<br/>pdfplumber]
+    Analyzer{analysis/analyzer.py<br/>ResumeAnalyzer}
+    RuleBased[rule_based.py<br/>RuleBasedAnalyzer MVP]
+    LlmAnalyzer[llm_client.py<br/>LlmAnalyzer v2]
+    Parser[resume_parser.py]
+    Scoring[scoring_engine.py]
+    SkillsDict[(data/skills_dictionary.txt)]
+  end
+
+  subgraph external [External v2]
+    Ollama[Ollama / OpenAI API]
+  end
+
+  Browser --> ReviewRoute
+  APIClient --> ApiRoute
+  ReviewRoute --> Templates
+  ReviewRoute --> Static
+  ReviewRoute --> ReviewService
+  ApiRoute --> ReviewService
+  Main --> ReviewRoute
+  Main --> ApiRoute
+
+  ReviewService --> Validate
+  ReviewService --> PdfExtractor
+  ReviewService --> Analyzer
+  Analyzer --> RuleBased
+  Analyzer -.->|v2| LlmAnalyzer
+  LlmAnalyzer -.-> Ollama
+
+  RuleBased --> Parser
+  RuleBased --> Scoring
+  Parser --> SkillsDict
+  RuleBased --> Models
+  PdfExtractor --> Exceptions
+  ReviewService --> Models
 ```
 
-### 4.2 Components
+#### Review request sequence (MVP)
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor User
+  participant Route as routes/review or api
+  participant Service as ResumeReviewService
+  participant Extract as PdfExtractor
+  participant Analyzer as RuleBasedAnalyzer
+  participant Parser as ResumeParser
+  participant Score as ScoringEngine
+
+  User->>Route: POST resume (multipart PDF)
+  Route->>Service: review(pdf_bytes, filename)
+  Service->>Service: validate_upload (type, size, magic bytes)
+  Service->>Extract: extract_text(pdf_bytes, max_pages)
+  Extract-->>Service: plain text
+  Service->>Analyzer: analyze(text)
+  Analyzer->>Parser: parse(text)
+  Parser-->>Analyzer: ParsedResume
+  Analyzer->>Score: score(parsed)
+  Score-->>Analyzer: score, breakdown, rationale
+  Analyzer->>Analyzer: build_summary(parsed)
+  Analyzer-->>Service: ReviewResult
+  Service-->>Route: ReviewResult
+  alt HTML flow
+    Route-->>User: review_result.html (score, summary, rationale)
+  else JSON API
+    Route-->>User: 200 JSON ReviewResult
+  end
+```
+
+#### Analysis pipeline (MVP)
+
+```mermaid
+flowchart LR
+  PDF[PDF bytes] --> Extract[Text extraction<br/>pdfplumber]
+  Extract --> Text[Normalized plain text]
+  Text --> Parse[ResumeParser<br/>sections, skills, dates]
+  Parse --> Parsed[ParsedResume]
+  Parsed --> Rubric[ScoringEngine<br/>weighted rubric]
+  Rubric --> Result[ReviewResult<br/>score 0-100, band, rationale]
+  Parse --> Skills[(skills_dictionary.txt)]
+  Rubric --> Bands{Score band}
+  Bands -->|0-39| Low[Low likelihood]
+  Bands -->|40-69| Mod[Moderate likelihood]
+  Bands -->|70-100| High[Strong likelihood]
+```
+
+#### Deployment view (local / single-node)
+
+```mermaid
+flowchart LR
+  User[User] -->|HTTP :8000| Uvicorn[uvicorn / gunicorn]
+  Uvicorn --> App[FastAPI app<br/>python/app]
+  App --> FS[(templates, static, data)]
+  App -.->|v2 optional| LLM[Ollama localhost:11434]
+
+  note1[MVP: no database<br/>stateless per request]
+  App --- note1
+```
+
+### 4.2 Layered design
+
+| Layer | Modules | Responsibility |
+|-------|---------|----------------|
+| Presentation | `main.py`, `routes/`, Jinja2, `static/` | HTTP, HTML/JSON responses, error pages |
+| Application | `review_service.py` | Orchestrate validation, extraction, analysis |
+| Domain | `models/review.py`, `exceptions.py` | Typed results and domain errors |
+| Infrastructure | `extraction/`, `analysis/` | PDF parsing, rules, scoring; LLM in v2 |
+
+### 4.3 Components
 
 | Component | Responsibility |
 |-----------|----------------|
@@ -154,7 +277,7 @@ Optional (v2):
 | `analysis/scoring_engine.py` | Weighted rubric → 0–100 + rationale bullets |
 | `models/review.py` | Pydantic models: `ReviewResult`, `ResumeSections`, `ReviewContext` |
 
-### 4.3 Project layout (proposed)
+### 4.4 Project layout (implemented)
 
 ```
 resume-reviewer/                    # Python app root

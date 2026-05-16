@@ -22,6 +22,7 @@ class RuleBasedAnalyzer:
             rationale=rationale,
             sections=parsed.sections,
             breakdown=breakdown,
+            analyzer_used="rule",
         )
 
     def _build_summary(self, parsed) -> str:

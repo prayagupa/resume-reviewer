@@ -11,13 +11,48 @@
     <h1>Resume Reviewer</h1>
     <p class="subtitle">Upload a text-based PDF resume for a summary and pickup score.</p>
 
-    <form class="upload-form" action="/review" method="post" enctype="multipart/form-data">
+    {% if feature_flag_ui_enabled %}
+    <section class="flags-panel" id="flags-panel">
+      <h2>Feature flags <span class="badge">dev</span></h2>
+      <p class="flags-hint">Toggle experiments, then save or upload a resume. Flags persist in cookies for 30 days.</p>
+      <div class="flags-grid">
+        <label class="flag-toggle">
+          <input type="checkbox" id="ff-llm" name="use_llm" form="review-form"
+                 {% if flags.llm_analyzer %}checked{% endif %}>
+          <span>LLM analyzer (Ollama)</span>
+        </label>
+        <label class="flag-toggle">
+          <input type="checkbox" id="ff-show-text" name="show_extracted_text" form="review-form"
+                 {% if flags.show_extracted_text %}checked{% endif %}>
+          <span>Show full extracted text</span>
+        </label>
+      <button type="button" class="btn-secondary" id="save-flags-btn">Save flags</button>
+      <p class="flags-status" id="flags-status" aria-live="polite"></p>
+    </section>
+    {% endif %}
+
+    <form class="upload-form" id="review-form" action="/review" method="post" enctype="multipart/form-data">
       <label for="resume">PDF resume</label>
       <input id="resume" name="resume" type="file" accept="application/pdf,.pdf" required>
+
+      <label for="job_title">Job title <span class="optional">(optional)</span></label>
+      <input id="job_title" name="job_title" type="text" placeholder="e.g. Senior Software Engineer">
+
+      <label for="required_skills">Required skills <span class="optional">(optional, comma-separated)</span></label>
+      <input id="required_skills" name="required_skills" type="text" placeholder="Python, AWS, FastAPI">
+
+      {% if not feature_flag_ui_enabled %}
+      <input type="hidden" name="use_llm" value="0">
+      <input type="hidden" name="show_extracted_text" value="0">
+      {% endif %}
+
       <button type="submit">Review resume</button>
     </form>
 
     <p class="disclaimer">Automated estimate only — not a hiring decision.</p>
   </main>
+  {% if feature_flag_ui_enabled %}
+  <script src="/static/flags.js"></script>
+  {% endif %}
 </body>
 </html>
